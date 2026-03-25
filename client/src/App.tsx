@@ -2,10 +2,11 @@ import { createBrowserRouter, RouterProvider, Outlet, Link } from 'react-router-
 import { useState } from 'react';
 import { isConnected, requestAccess, getAddress } from '@stellar/freighter-api';
 import Dashboard from './components/Dashboard';
+import ApyDashboard from './components/dashboard/ApyDashboard';
 import AIAdvisor from './components/AIAdvisor';
 import Vault from './components/Vault';
 import PortfolioPage from './components/portfolio/PortfolioPage';
-import { Wallet, LayoutDashboard, BrainCircuit, Landmark, PieChart, Loader2, LogOut } from 'lucide-react';
+import { Wallet, LayoutDashboard, BarChart3, BrainCircuit, Landmark, PieChart, Loader2, LogOut } from 'lucide-react';
 import './index.css';
 
 const truncateKey = (key: string) => `${key.slice(0, 4)}...${key.slice(-4)}`;
@@ -75,6 +76,9 @@ const RootLayout = () => {
           <Link to="/" className="hover:text-white transition-colors flex items-center gap-2">
             <LayoutDashboard size={18} /> Dashboard
           </Link>
+          <Link to="/apy" className="hover:text-white transition-colors flex items-center gap-2">
+            <BarChart3 size={18} /> APY Compare
+          </Link>
           <Link to="/ai-advisor" className="hover:text-white transition-colors flex items-center gap-2">
             <BrainCircuit size={18} /> AI Advisor
           </Link>
@@ -133,6 +137,10 @@ const router = createBrowserRouter([
       {
         path: '/',
         element: <Dashboard />,
+      },
+      {
+        path: '/apy',
+        element: <ApyDashboard />,
       },
       {
         path: '/ai-advisor',
