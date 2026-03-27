@@ -460,7 +460,15 @@ impl YieldVault {
 mod tests {
     use super::*;
     use soroban_sdk::testutils::Address as _;
-    use soroban_sdk::Env;
+    use soroban_sdk::{contract, contractimpl, Env};
+
+    #[contract]
+    struct ContractWallet;
+
+    #[contractimpl]
+    impl ContractWallet {
+        pub fn ping(_env: Env) {}
+    }
 
     fn setup_env() -> (Env, YieldVaultClient<'static>, Address, Address, Address) {
         let env = Env::default();
@@ -530,6 +538,18 @@ mod tests {
         assert_eq!(shares2, 500); // proportional to existing ratio
         assert_eq!(client.total_shares(), 1500);
         assert_eq!(client.total_assets(), 1500);
+    }
+
+    #[test]
+    fn test_deposit_accepts_contract_wallet_address() {
+        let (env, client, _, token_addr, token_admin) = setup_env();
+        let contract_wallet = env.register(ContractWallet, ());
+
+        mint_tokens(&env, &token_addr, &token_admin, &contract_wallet, 1000);
+
+        let shares = client.deposit(&contract_wallet, &1000);
+        assert_eq!(shares, 1000);
+        assert_eq!(client.get_shares(&contract_wallet), 1000);
     }
 
     #[test]

@@ -83,8 +83,9 @@ async function signWithFreighter(xdr: string): Promise<string> {
   const signed = await freighter.signTransaction(xdr, {
     networkPassphrase: NETWORK_PASSPHRASE,
   });
-  if (!signed) throw new Error("Transaction was rejected by wallet");
-  return signed;
+  const signedXdr = signed?.signedTxXdr;
+  if (!signedXdr) throw new Error("Transaction was rejected by wallet");
+  return signedXdr;
 }
 
 /**

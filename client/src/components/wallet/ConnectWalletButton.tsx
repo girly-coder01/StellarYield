@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, LogOut, Wallet } from "lucide-react";
+import { Cpu, Loader2, LogOut, Wallet } from "lucide-react";
 import { useWallet } from "../../context/useWallet";
 import WalletConnectionModal from "./WalletConnectionModal";
 
@@ -8,8 +8,14 @@ function truncateKey(key: string) {
 }
 
 export default function ConnectWalletButton() {
-  const { walletAddress, isConnected, isConnecting, disconnectWallet } =
-    useWallet();
+  const {
+    walletAddress,
+    walletAddressType,
+    providerLabel,
+    isConnected,
+    isConnecting,
+    disconnectWallet,
+  } = useWallet();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isConnected && walletAddress) {
@@ -21,7 +27,13 @@ export default function ConnectWalletButton() {
         title="Disconnect wallet"
       >
         <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span>{truncateKey(walletAddress)}</span>
+        <span>
+          {providerLabel === "Freighter" ? "Freighter" : "Smart Wallet"}{" "}
+          {truncateKey(walletAddress)}
+        </span>
+        {walletAddressType === "contract" ? (
+          <Cpu size={14} className="text-cyan-300" />
+        ) : null}
         <LogOut size={14} className="text-red-400" />
       </button>
     );
