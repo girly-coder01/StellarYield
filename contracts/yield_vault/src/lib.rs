@@ -31,6 +31,8 @@ enum DataKey {
     Timelock(Symbol), // Key for different timelocked actions
     PendingAdmin,
     Oracle,
+	// Emergency settings
+	EmergencyPenaltyBps, // optional haircut on withdrawals during emergency
 }
 
 mod admin;
@@ -38,6 +40,7 @@ mod fees;
 mod flashloan;
 mod keeper;
 mod oracle;
+mod emergency;
 mod verification;
 
 // ── Errors ──────────────────────────────────────────────────────────────
@@ -482,6 +485,7 @@ impl YieldVault {
                 .instance()
                 .set(&DataKey::TotalHarvested, &0i128);
         }
+
         env.events().publish(
             (symbol_short!("strat_cfg"),),
             (reward_protocol, reward_token, dex_router, keeper),
@@ -632,6 +636,18 @@ impl YieldVault {
     pub fn get_max_flash_loan(env: Env) -> Result<i128, VaultError> {
         Self::max_flash_amount(&env)
     }
+
+	// ── Emergency Withdrawals ────────────────────────────────────────
+
+	/// Admin: set emergency penalty bps [0..=10_000].
+	pub fn set_emergency_penalty(env: Env, admin: Address, penalty_bps: u32) -> Result<(), VaultError> {
+		YieldVault::set_emergency_penalty_impl(&env, &admin, penalty_bps)
+	}
+
+	/// Emergency withdraw from idle reserves only; may apply penalty.
+	pub fn emergency_withdraw(env: Env, to: Address, shares: i128) -> Result<i128, VaultError> {
+		YieldVault::emergency_withdraw_impl(&env, &to, shares)
+	}
 
     // ── Internal ────────────────────────────────────────────────────
 
