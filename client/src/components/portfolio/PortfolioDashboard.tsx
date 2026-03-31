@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { YieldFlowCanvas } from "../visualizations";
 
+import PortfolioVisualizer from "../visualizer/PortfolioVisualizer";
+
 // ── Types ───────────────────────────────────────────────────────────────
 
 interface VaultPosition {
@@ -159,6 +161,8 @@ export default function PortfolioDashboard({ walletAddress }: PortfolioDashboard
       >
         <YieldFlowCanvas scene="portfolio" positions={positions} />
       </Suspense>
+      {/* 3D Visualizer Integration */}
+      <PortfolioVisualizer />
 
       {/* Positions Table */}
       <div className="glass-panel p-6">

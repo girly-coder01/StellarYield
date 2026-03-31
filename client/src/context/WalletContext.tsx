@@ -1,14 +1,25 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { getAddress, isConnected, requestAccess } from "@stellar/freighter-api";
+import { isConnected } from "@stellar/freighter-api";
+import {
+  clearStoredSession,
+  connectWalletSession,
+  loadStoredSession,
+} from "../auth/session";
+import { getAdapter } from "../auth/walletAdapters";
+import type { ConnectWalletOptions, ExtensionWalletProviderId, WalletSession } from "../auth/types";
 import { WalletContext } from "./WalletContextObject";
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [session, setSession] = useState<WalletSession | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isFreighterInstalled, setIsFreighterInstalled] = useState<
     boolean | null
   >(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSession(loadStoredSession());
+  }, []);
 
   useEffect(() => {
     async function checkConnection() {
@@ -21,11 +32,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         }
 
         setIsFreighterInstalled(true);
-
-        const addressResult = await getAddress();
-        if (!addressResult.error) {
-          setWalletAddress(addressResult.address);
-        }
       } catch (error) {
         console.error("Unable to inspect Freighter connection", error);
         setIsFreighterInstalled(false);
@@ -35,40 +41,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     void checkConnection();
   }, []);
 
-  async function connectWallet() {
+  async function connectWallet(options?: ConnectWalletOptions) {
     setIsConnecting(true);
     setErrorMessage(null);
 
     try {
-      const connectionResult = await isConnected();
-
-      if (connectionResult.error || !connectionResult.isConnected) {
-        setIsFreighterInstalled(false);
-        setErrorMessage(
-          "Freighter extension was not detected. Install it to continue.",
-        );
-        return false;
-      }
-
-      setIsFreighterInstalled(true);
-
-      const accessResult = await requestAccess();
-      if (accessResult.error) {
-        setErrorMessage(accessResult.error);
-        return false;
-      }
-
-      const addressResult = await getAddress();
-      if (addressResult.error) {
-        setErrorMessage(addressResult.error);
-        return false;
-      }
-
-      setWalletAddress(addressResult.address);
+      const nextSession = await connectWalletSession(options);
+      setSession(nextSession);
       return true;
     } catch (error) {
       console.error("Wallet connection failed", error);
-      setErrorMessage("Wallet connection failed. Please try again.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Wallet connection failed. Please try again.",
+      );
       return false;
     } finally {
       setIsConnecting(false);
@@ -76,7 +63,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }
 
   function disconnectWallet() {
-    setWalletAddress(null);
+    clearStoredSession();
+    setSession(null);
     setErrorMessage(null);
   }
 
@@ -84,18 +72,42 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setErrorMessage(null);
   }
 
+  async function signTransaction(xdr: string, networkPassphrase: string): Promise<string> {
+    if (!session) {
+      throw new Error("No wallet connected.");
+    }
+    const EXTENSION_PROVIDERS: ExtensionWalletProviderId[] = ["freighter", "xbull", "albedo"];
+    if ((EXTENSION_PROVIDERS as string[]).includes(session.providerId)) {
+      const adapter = getAdapter(session.providerId as ExtensionWalletProviderId);
+      if (!adapter) {
+        throw new Error(`No adapter for provider: ${session.providerId}`);
+      }
+      return adapter.signTransaction(xdr, networkPassphrase);
+    }
+    // Smart wallet (email / google / github) sessions don't support direct signing
+    throw new Error("signTransaction is not supported for smart wallet sessions.");
+  }
+
   const value = useMemo(
     () => ({
-      walletAddress,
-      isConnected: Boolean(walletAddress),
+      walletAddress: session?.walletAddress ?? null,
+      walletAddressType: session?.walletAddressType ?? null,
+      providerLabel: session?.providerLabel ?? null,
+      sessionKeyAddress: session?.sessionKeyAddress ?? null,
+      verificationStatus: session?.verificationStatus ?? null,
+      isConnected: Boolean(session?.walletAddress),
       isConnecting,
       isFreighterInstalled,
       errorMessage,
       connectWallet,
       disconnectWallet,
       clearError,
+      signTransaction,
     }),
-    [walletAddress, isConnecting, isFreighterInstalled, errorMessage],
+    // signTransaction is stable: it only captures `session` which is already
+    // in the deps array below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session, isConnecting, isFreighterInstalled, errorMessage],
   );
 
   return (
