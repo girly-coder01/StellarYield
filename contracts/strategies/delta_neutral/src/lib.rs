@@ -194,11 +194,8 @@ impl DeltaNeutralStrategy {
         );
 
         let perp_client = PerpExchangeClient::new(&env, &perp_addr);
-        let perp_notional = perp_client.open_short(
-            &env.current_contract_address(),
-            &half,
-            &spot_addr,
-        );
+        let perp_notional =
+            perp_client.open_short(&env.current_contract_address(), &half, &spot_addr);
 
         // ── Record entry price from oracle ────────────────────────────
         let oracle_client = OracleClient::new(&env, &oracle_addr);
@@ -457,10 +454,8 @@ impl DeltaNeutralStrategy {
             write_position(&env, &depositor, &position);
         }
 
-        env.events().publish(
-            (symbol_short!("fund"), depositor.clone()),
-            (funding,),
-        );
+        env.events()
+            .publish((symbol_short!("fund"), depositor.clone()), (funding,));
 
         Ok(funding)
     }

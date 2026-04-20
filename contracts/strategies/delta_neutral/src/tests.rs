@@ -50,12 +50,7 @@ mod tests {
 
     #[contractimpl]
     impl MockPerp {
-        pub fn open_short(
-            env: Env,
-            trader: Address,
-            collateral: i128,
-            _asset: Address,
-        ) -> i128 {
+        pub fn open_short(env: Env, trader: Address, collateral: i128, _asset: Address) -> i128 {
             // Pull collateral from trader
             // (In tests the strategy contract is the "trader")
             let _ = trader;
@@ -141,7 +136,16 @@ mod tests {
 
         client.initialize(&admin, &usdc, &spot, &amm, &perp, &oracle);
 
-        TestEnv { env, client, admin, usdc, spot, amm, perp, oracle }
+        TestEnv {
+            env,
+            client,
+            admin,
+            usdc,
+            spot,
+            amm,
+            perp,
+            oracle,
+        }
     }
 
     fn mint(env: &Env, token: &Address, to: &Address, amount: i128) {
@@ -168,14 +172,9 @@ mod tests {
     #[test]
     fn test_initialize_twice_fails() {
         let t = setup();
-        let result = t.client.try_initialize(
-            &t.admin,
-            &t.usdc,
-            &t.spot,
-            &t.amm,
-            &t.perp,
-            &t.oracle,
-        );
+        let result = t
+            .client
+            .try_initialize(&t.admin, &t.usdc, &t.spot, &t.amm, &t.perp, &t.oracle);
         assert_eq!(result, Err(Ok(StrategyError::AlreadyInitialized)));
     }
 
