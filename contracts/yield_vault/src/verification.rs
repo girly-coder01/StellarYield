@@ -1,7 +1,8 @@
 #[cfg(kani)]
 mod verification {
-    use super::*;
+    use crate::YieldVault;
     use kani;
+    use soroban_sdk::{Address, Env};
 
     /// Invariant: performance fee must always be within [1%, 10%] range.
     #[kani::proof]

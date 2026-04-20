@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::too_many_arguments)]
 
 //! # Dutch Auction Liquidation Engine
 //!
@@ -894,7 +895,7 @@ mod tests {
         // Penalty = 525 * 500 / 10000 = 26 (5%)
         // Total from buyer = 525 + 26 = 551
 
-        let (coll_received, _debt_paid) = client.buy_collateral(
+        let (coll_received, debt_paid) = client.buy_collateral(
             &liquidator,
             &auction_id,
             &500,
@@ -953,7 +954,7 @@ mod tests {
         // Actually, cost is 1200 which > debt_to_cover (800), so debt_paid = 800
         // Total = 800 + 40 = 840
 
-        let (coll_received, debt_paid) = client.buy_collateral(
+        let (coll_received, _debt_paid) = client.buy_collateral(
             &liquidator,
             &auction_id,
             &1_000,

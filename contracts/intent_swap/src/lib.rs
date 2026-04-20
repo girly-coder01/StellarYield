@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::too_many_arguments)]
 
 //! # Intent-Based Swap Architecture (CowSwap Style)
 //!

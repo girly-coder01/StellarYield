@@ -527,7 +527,7 @@ impl DeltaNeutralStrategy {
         if admin != read_admin(&env) {
             return Err(StrategyError::Unauthorized);
         }
-        if threshold_bps < 1 || threshold_bps > 10_000 {
+        if !(1..=10_000).contains(&threshold_bps) {
             return Err(StrategyError::InvalidThreshold);
         }
         write_rebalance_threshold_bps(&env, threshold_bps);
