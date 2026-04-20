@@ -110,7 +110,7 @@ struct TestEnv {
 
 fn setup() -> TestEnv {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
 
     let contract_id = env.register(DeltaNeutralStrategy, ());
     let client = DeltaNeutralStrategyClient::new(&env, &contract_id);
@@ -290,7 +290,7 @@ fn test_auto_rebalance_not_needed() {
 #[test]
 fn test_auto_rebalance_with_price_move() {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
 
     let contract_id = env.register(DeltaNeutralStrategy, ());
     let client = DeltaNeutralStrategyClient::new(&env, &contract_id);
@@ -406,7 +406,7 @@ fn test_get_position_none_for_new_user() {
 #[test]
 fn test_admin_can_trigger_rebalance() {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
 
     let contract_id = env.register(DeltaNeutralStrategy, ());
     let client = DeltaNeutralStrategyClient::new(&env, &contract_id);
