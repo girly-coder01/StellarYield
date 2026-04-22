@@ -51,7 +51,7 @@ jobs:
           retention-days: 30
 
       - name: Comment audit results on PR
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         uses: actions/github-script@v7
         with:
           script: |
@@ -148,7 +148,7 @@ jobs:
           retention-days: 30
 
       - name: Comment Clippy findings on PR
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         uses: actions/github-script@v7
         with:
           script: |
@@ -275,7 +275,7 @@ jobs:
           cat pr_comment.md
 
       - name: Comment custom pattern results on PR
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
         uses: actions/github-script@v7
         with:
           script: |

@@ -14,8 +14,12 @@ pub struct MockVault;
 
 #[contractimpl]
 impl MockVault {
-    pub fn total_assets(_env: Env) -> i128 { 10_000_000 }
-    pub fn total_shares(_env: Env) -> i128 { 10_000_000 }
+    pub fn total_assets(_env: Env) -> i128 {
+        10_000_000
+    }
+    pub fn total_shares(_env: Env) -> i128 {
+        10_000_000
+    }
 }
 
 // ── Mock Oracle ────────────────────────────────────────────────────────────
@@ -66,7 +70,7 @@ fn setup_env() -> (
 
     // MockVault for total_assets / total_shares
     let metrics_id = env.register(MockVault, ());
-    let oracle_id  = env.register(MockOracle, ());
+    let oracle_id = env.register(MockOracle, ());
 
     client.initialize(
         &admin,
@@ -74,12 +78,20 @@ fn setup_env() -> (
         &collateral_addr,
         &metrics_id,
         &oracle_id,
-        &15000, // 150 % ICR
-        &11000, // 110 % MCR
+        &15000,                      // 150 % ICR
+        &11000,                      // 110 % MCR
         &50_000_000_000_000_000i128, // 5 % APR (0.05 * 1e18)
     );
 
-    (env, client, admin, s_usd_addr, collateral_addr, metrics_id, oracle_id)
+    (
+        env,
+        client,
+        admin,
+        s_usd_addr,
+        collateral_addr,
+        metrics_id,
+        oracle_id,
+    )
 }
 
 // ── Helper: mint collateral to a user ─────────────────────────────────────
@@ -184,4 +196,46 @@ fn test_incremental_debt_respects_icr() {
     // Second borrow: another $4_000 → total $8_000, CR ≈ 125 % < 150 % → must fail
     let err = client.try_mint_s_usd(&user, &0, &4_000);
     assert!(err.is_err(), "second borrow should violate ICR");
+}
+
+#[test]
+fn test_double_initialize_rejected() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register(StablecoinManager, ());
+    let client = StablecoinManagerClient::new(&env, &contract_id);
+
+    let admin = Address::generate(&env);
+    let s_usd_addr = env
+        .register_stellar_asset_contract_v2(contract_id.clone())
+        .address();
+    let collateral_addr = env
+        .register_stellar_asset_contract_v2(Address::generate(&env))
+        .address();
+    let metrics_id = env.register(MockVault, ());
+    let oracle_id = env.register(MockOracle, ());
+
+    client.initialize(
+        &admin,
+        &s_usd_addr,
+        &collateral_addr,
+        &metrics_id,
+        &oracle_id,
+        &15000,
+        &11000,
+        &50_000_000_000_000_000i128,
+    );
+
+    let result = client.try_initialize(
+        &admin,
+        &s_usd_addr,
+        &collateral_addr,
+        &metrics_id,
+        &oracle_id,
+        &15000,
+        &11000,
+        &50_000_000_000_000_000i128,
+    );
+    assert_eq!(result, Err(Ok(crate::Error::AlreadyInitialized)));
 }
