@@ -20,7 +20,7 @@ export default function ProtocolNode({
 }: ProtocolNodeProps) {
   const meshRef = useRef<Mesh>(null);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (meshRef.current) {
       meshRef.current.scale.setScalar(
         1 + Math.sin(Date.now() * 0.002) * 0.05

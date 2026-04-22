@@ -60,7 +60,7 @@ export function useYieldFlowData(maxParticlesPerStream: number): {
   const [nodes, setNodes] = useState<FlowNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +104,9 @@ export function useYieldFlowData(maxParticlesPerStream: number): {
 
     return () => {
       cancelled = true;
-      clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     };
   }, [maxParticlesPerStream]);
 

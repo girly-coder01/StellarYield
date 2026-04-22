@@ -1,5 +1,6 @@
 import { shaderMaterial } from "@react-three/drei";
 import { extend } from "@react-three/fiber";
+import type { ThreeElements as FiberThreeElements } from "@react-three/fiber";
 import { Color, AdditiveBlending } from "three";
 
 const GlowParticleMaterial = shaderMaterial(
@@ -32,20 +33,20 @@ const GlowParticleMaterial = shaderMaterial(
 
       gl_FragColor = vec4(uColor, glow * uOpacity * depthFade);
     }
-  `
+  `,
+  (material) => {
+    if (!material) return;
+    material.transparent = true;
+    material.depthWrite = false;
+    material.blending = AdditiveBlending;
+  }
 );
-
-GlowParticleMaterial.defaultProps = {
-  transparent: true,
-  depthWrite: false,
-  blending: AdditiveBlending,
-};
 
 extend({ GlowParticleMaterial });
 
 declare module "@react-three/fiber" {
   interface ThreeElements {
-    glowParticleMaterial: JSX.IntrinsicElements["shaderMaterial"] & {
+    glowParticleMaterial: FiberThreeElements["shaderMaterial"] & {
       uColor?: Color;
       uOpacity?: number;
     };
