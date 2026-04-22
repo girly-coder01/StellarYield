@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, Zap, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
-import { zapDeposit, type TxStatus } from "../../services/soroban";
+import TxStatusTimeline from "../../components/transaction/TxStatusTimeline";
+import { zapDeposit } from "../../services/soroban";
+import type { TxPhase } from "../../services/transactionPhase";
+import { TX_PHASE_PIPELINE } from "../../services/transactionPhase";
 import { fetchSwapQuote } from "./fetchSwapQuote";
 import { minAmountAfterSlippage } from "./slippage";
 import { parseDecimalToStroops, formatStroopsToDecimal } from "./amount";
@@ -46,7 +49,9 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState(0.5);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [txPhase, setTxPhase] = useState<TxStatus>("idle");
+  const [txPhase, setTxPhase] = useState<TxPhase>("idle");
+  const lastProgressPhaseRef = useRef<TxPhase>("idle");
+  const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [expectedOut, setExpectedOut] = useState<bigint | null>(null);
@@ -112,7 +117,14 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
     return minAmountAfterSlippage(expectedOut, slippage);
   }, [expectedOut, slippage]);
 
-  const handleZap = async () => {
+  const emitPhase = useCallback((p: TxPhase) => {
+    setTxPhase(p);
+    if (p !== "success" && p !== "failure") {
+      lastProgressPhaseRef.current = p;
+    }
+  }, []);
+
+  const handleZap = useCallback(async () => {
     if (!walletAddress || !inputAsset || !vaultContractId || !vaultToken.contractId) return;
     let amountIn: bigint;
     try {
@@ -127,6 +139,9 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
       return;
     }
 
+    lastProgressPhaseRef.current = "idle";
+    setTxPhase("idle");
+    setTxHash(null);
     setStatus("loading");
     setError("");
     try {
@@ -140,18 +155,32 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
           minAmountOut: minOut,
           minSharesOut: minOut,
         },
-        (s) => setTxPhase(s)
+        emitPhase
       );
       if (!result.success) {
         throw new Error(result.error || "Transaction failed");
       }
+      setTxHash(result.hash ?? null);
       setStatus("success");
       setAmount("");
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Transaction failed");
     }
-  };
+  }, [
+    walletAddress,
+    inputAsset,
+    vaultContractId,
+    vaultToken.contractId,
+    amount,
+    minOut,
+    emitPhase,
+  ]);
+
+  const retryZap = useCallback(() => {
+    setError("");
+    void handleZap();
+  }, [handleZap]);
 
   const configOk =
     Boolean(vaultContractId) &&
@@ -295,16 +324,28 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
         </div>
       )}
 
-      {error && (
+      {error && txPhase !== "failure" && (
         <div className="flex items-center gap-2 text-red-400 text-sm mb-4">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
-      {txPhase !== "idle" && status === "loading" && (
-        <p className="text-xs text-gray-500 mb-2 capitalize">Status: {txPhase}</p>
-      )}
+      <TxStatusTimeline
+        steps={TX_PHASE_PIPELINE}
+        phase={txPhase}
+        errorMessage={txPhase === "failure" ? error : null}
+        txHash={txHash}
+        failedAtPhase={
+          txPhase === "failure"
+            ? lastProgressPhaseRef.current !== "idle"
+              ? lastProgressPhaseRef.current
+              : "polling"
+            : null
+        }
+        onRetry={txPhase === "failure" ? retryZap : undefined}
+        className="mb-4"
+      />
 
       <button
         type="button"
