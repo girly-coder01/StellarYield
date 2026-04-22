@@ -16,6 +16,7 @@ import zapRouter from "./routes/zap";
 import pnlRouter from "./routes/pnl";
 import exportRouter from "./routes/export";
 import feesRouter from "./routes/fees";
+import contactsRouter from "./routes/contacts";
 import {
   createAuthChallenge,
   verifyAuthChallenge,
@@ -78,6 +79,7 @@ export function createApp() {
   app.use("/api/zap", zapRouter);
   app.use("/api/users", pnlRouter);
   app.use("/api/users", exportRouter);
+  app.use("/api/contacts", contactsRouter);
 
   app.get("/api/metrics", getMetrics);
 
