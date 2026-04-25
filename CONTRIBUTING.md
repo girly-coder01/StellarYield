@@ -13,6 +13,13 @@ Thanks for contributing to StellarYield. This repository contains frontend, back
 
 Use the quick commands in [README.md](./README.md), or follow the more detailed [Pre-commit Formatting and Verification Guide](./docs/contributor-guide.md).
 
+Before opening a PR that touches the client, run these from `client/`:
+
+- `npm ci`
+- `npm run lint`
+- `npm run test:coverage`
+- `npm run build`
+
 ## CI Failure Artifacts
 
 If CI fails on your pull request, open the failed workflow run in GitHub Actions and check the **Artifacts** section. Frontend build logs, any generated frontend build output, and contract test logs are uploaded there for short-term debugging.
