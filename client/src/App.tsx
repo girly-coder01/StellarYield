@@ -24,6 +24,8 @@ import TransparencyDashboard from "./pages/transparency/TransparencyDashboard";
 import RiskChronology from "./pages/transparency/RiskChronology";
 import YieldForGood from "./features/donations/YieldForGood";
 import YieldCalculator from "./components/calculator/YieldCalculator";
+import { GoalPlannerPage } from "./features/goal_planner";
+import { FragmentationDashboard } from "./features/fragmentation";
 import { useWallet } from "./context/useWallet";
 import { useState } from "react";
 import {
@@ -45,6 +47,8 @@ import {
   Settings,
   Bell,
   Calculator,
+  Target,
+  Network,
 } from "lucide-react";
 import "./index.css";
 import SettingsModal from "./features/settings/SettingsModal";
@@ -133,6 +137,20 @@ const RootLayout = () => {
               <Calculator size={18} /> Calculator
             </Link>
           )}
+          {isConnected && (
+            <Link
+              to="/planner"
+              className="hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Target size={18} /> Goal Planner
+            </Link>
+          )}
+          <Link
+            to="/fragmentation"
+            className="hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Network size={18} /> Fragmentation
+          </Link>
           {isConnected && (
             <Link
               to="/governance"
@@ -280,6 +298,14 @@ const router = createBrowserRouter([
       {
         path: "/calculator",
         element: <YieldCalculator />,
+      },
+      {
+        path: "/planner",
+        element: <GoalPlannerPage />,
+      },
+      {
+        path: "/fragmentation",
+        element: <FragmentationDashboard />,
       },
       {
         path: "/governance",
