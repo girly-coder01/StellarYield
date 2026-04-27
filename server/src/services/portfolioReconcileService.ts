@@ -1,5 +1,3 @@
-import type { PrismaClient } from '@prisma/client'
-
 export interface PortfolioPosition {
   assetId: string
   amount: number
@@ -31,7 +29,7 @@ export interface ReconciliationMismatch {
 }
 
 export class PortfolioReconcileService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async reconcilePortfolio(
     walletAddress: string,
@@ -187,13 +185,15 @@ export class PortfolioReconcileService {
     status: string = 'success',
     error?: unknown
   ): Promise<void> {
-    const eventData = {
+    const eventData: Record<string, unknown> = {
       walletAddress,
       changes: changes.length,
       mismatches: mismatches.length,
       status,
       timestamp: new Date().toISOString(),
-      ...(error && { error: String(error) }),
+    }
+    if (error) {
+      eventData.error = String(error)
     }
     console.log('[PortfolioReconcile]', eventData)
   }
@@ -207,6 +207,6 @@ export class PortfolioReconcileService {
   }
 }
 
-export function createPortfolioReconcileService(prisma: PrismaClient) {
+export function createPortfolioReconcileService(prisma: any) {
   return new PortfolioReconcileService(prisma)
 }
