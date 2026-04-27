@@ -6,7 +6,7 @@ export function sendError(
   statusCode: number,
   error: string,
   message: string,
-  details?: any
+  details?: unknown
 ): void {
   const errorResponse: ErrorResponse = { error, message };
   if (details !== undefined) {

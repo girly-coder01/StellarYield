@@ -1,8 +1,6 @@
 import request from "supertest";
 import express from "express";
 import healthRouter from "../routes/health";
-import { PrismaClient } from "@prisma/client";
-import { Horizon } from "@stellar/stellar-sdk";
 
 jest.mock("@prisma/client", () => {
   return {

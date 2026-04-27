@@ -13,14 +13,20 @@ const networkLabel = HORIZON_URL.includes("testnet") ? "testnet" : "mainnet";
 
 const horizonServer = new Horizon.Server(HORIZON_URL);
 
-function isRetryableError(error: any): boolean {
+function isRetryableError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const err = error as Record<string, unknown>;
+  
   // Network errors
-  if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
+  if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ETIMEDOUT') {
     return true;
   }
   // HTTP 5xx errors
-  if (error.response && typeof error.response.status === 'number') {
-    return error.response.status >= 500;
+  if (err.response && typeof err.response === 'object' && err.response !== null) {
+    const response = err.response as Record<string, unknown>;
+    if (typeof response.status === 'number') {
+      return response.status >= 500;
+    }
   }
   return false;
 }
@@ -31,7 +37,7 @@ async function retryWithBackoff<T>(
   baseDelay: number,
   timeoutMs: number
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {

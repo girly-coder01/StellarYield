@@ -77,6 +77,9 @@ describe("getZapQuote", () => {
     if (prevSim !== undefined) {
       process.env.ZAP_QUOTE_SIM_SOURCE_ACCOUNT = prevSim;
     }
+    if (prevRouter !== undefined) {
+      process.env.DEX_ROUTER_CONTRACT_ID = prevRouter;
+    }
   });
 
   it("falls back if simulated router times out", async () => {
@@ -88,7 +91,9 @@ describe("getZapQuote", () => {
     process.env.ZAP_QUOTE_SIM_SOURCE_ACCOUNT = "GABC123";
     process.env.SOROBAN_RPC_TIMEOUT_MS = "100";
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const StellarSdk = require("@stellar/stellar-sdk");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     jest.spyOn(StellarSdk.rpc.Server.prototype, "getAccount").mockResolvedValue({} as any);
     jest.spyOn(StellarSdk.rpc.Server.prototype, "simulateTransaction").mockImplementation(() => {
       return new Promise((resolve) => setTimeout(resolve, 300));

@@ -1,10 +1,19 @@
-import { Horizon } from "@stellar/stellar-sdk";
 import { fetchNetworkSnapshot } from "../services/stellarNetworkService";
 
 jest.setTimeout(30000);
 
-var mockCallBuilder: any;
-var mockHorizonServer: any;
+interface MockCallBuilder {
+  order: jest.Mock;
+  limit: jest.Mock;
+  call: jest.Mock;
+}
+interface MockHorizonServer {
+  ledgers: jest.Mock;
+}
+// eslint-disable-next-line no-var
+var mockCallBuilder: MockCallBuilder;
+// eslint-disable-next-line no-var
+var mockHorizonServer: MockHorizonServer;
 
 function createMockCallBuilder() {
   mockCallBuilder = {
@@ -59,7 +68,7 @@ describe("stellarNetworkService", () => {
 
   it("retries on network error and succeeds", async () => {
     const networkError = new Error("Network error");
-    (networkError as any).code = "ECONNREFUSED";
+    Object.assign(networkError, { code: "ECONNREFUSED" });
 
     const mockResponse = {
       records: [
@@ -87,7 +96,7 @@ describe("stellarNetworkService", () => {
 
   it("exhausts retries and throws error", async () => {
     const networkError = new Error("Network error");
-    (networkError as any).code = "ECONNREFUSED";
+    Object.assign(networkError, { code: "ECONNREFUSED" });
 
     mockCallBuilder.call = jest.fn().mockRejectedValue(networkError);
 
@@ -97,7 +106,7 @@ describe("stellarNetworkService", () => {
 
   it("does not retry on 4xx client error", async () => {
     const clientError = new Error("Client error");
-    (clientError as any).response = { status: 400 };
+    Object.assign(clientError, { response: { status: 400 } });
 
     mockCallBuilder.call.mockRejectedValue(clientError);
 
@@ -107,7 +116,7 @@ describe("stellarNetworkService", () => {
 
   it("retries on 5xx server error", async () => {
     const serverError = new Error("Server error");
-    (serverError as any).response = { status: 500 };
+    Object.assign(serverError, { response: { status: 500 } });
 
     const mockResponse = {
       records: [
