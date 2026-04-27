@@ -45,6 +45,7 @@ function buildProtocolSnapshot(
     network,
     source: config.source,
     fetchedAt,
+    rewards: config.rewardStreams,
   };
 }
 
@@ -90,6 +91,7 @@ export async function getYieldData(): Promise<NormalizedYield[]> {
         network: "mainnet",
         source: protocol.source,
         fetchedAt: new Date().toISOString(),
+        rewards: protocol.rewardStreams,
       })),
     );
 
