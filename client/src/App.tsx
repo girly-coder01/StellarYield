@@ -129,6 +129,12 @@ const RootLayout = () => {
           >
             <Landmark size={18} /> Vaults
           </Link>
+          <Link
+            to="/strategy"
+            className="hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Zap size={18} /> Strategies
+          </Link>
           {isConnected && (
             <Link
               to="/portfolio"
@@ -302,6 +308,10 @@ const router = createBrowserRouter([
       {
         path: "/vault/:slug",
         element: <Vault />,
+      },
+      {
+        path: "/strategy",
+        element: <StrategyComparison />,
       },
       {
         path: "/portfolio",
