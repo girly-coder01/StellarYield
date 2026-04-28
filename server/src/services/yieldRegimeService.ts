@@ -61,7 +61,7 @@ export class YieldRegimeService {
       reasoning = `Incentive spike detected: +${incentiveChange.toFixed(2)} bps`
     } else if (avgVolatility < this.thresholds.volatilityLow && apyTrend > -5) {
       regime = 'stable'
-      confidence = Math.min(1, (this.thresholds.volatilityLow / avgVolatility) * 0.8)
+      confidence = Math.min(1, Math.max(0, (this.thresholds.volatilityLow - avgVolatility) / this.thresholds.volatilityLow) * 0.8)
       reasoning = `Stable regime: volatility ${avgVolatility.toFixed(2)}%, APY trend ${apyTrend.toFixed(2)}%`
     }
 

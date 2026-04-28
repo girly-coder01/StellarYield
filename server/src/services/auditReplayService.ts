@@ -121,6 +121,7 @@ export class AuditReplayService {
   ): Promise<StrategyDecisionOutputs> {
     // Simulate strategy decision logic with same inputs
     // In production, this would call the actual strategy algorithm
+    await new Promise(resolve => setTimeout(resolve, 1))
     return {
       recommendedAction: 'hold',
       reasoning: { simulation: true, timestamp: new Date().toISOString() },

@@ -163,7 +163,7 @@ export class PortfolioReconcileService {
     return [
       {
         assetId: 'USDC',
-        amount: vaultBalance.tvl,
+        amount: vaultBalance.tvl as number,
         vaultId: 'vault-1',
         protocol: 'unknown',
       },
