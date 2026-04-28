@@ -1,8 +1,8 @@
-import { PortfolioReconcileService, type PortfolioPosition } from '../services/portfolioReconcileService'
+import { PortfolioReconcileService } from '../services/portfolioReconcileService'
 
 describe('PortfolioReconcileService', () => {
   let service: PortfolioReconcileService
-  const mockPrisma = {
+  const mockPrisma: { vaultBalance: { findUnique: jest.Mock; upsert: jest.Mock } } = {
     vaultBalance: {
       findUnique: jest.fn(),
       upsert: jest.fn(),
@@ -11,7 +11,7 @@ describe('PortfolioReconcileService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    service = new PortfolioReconcileService(mockPrisma as any)
+    service = new PortfolioReconcileService(mockPrisma)
   })
 
   describe('reconcilePortfolio', () => {

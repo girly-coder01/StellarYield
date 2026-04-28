@@ -28,8 +28,17 @@ export interface ReconciliationMismatch {
   severity: 'info' | 'warning' | 'critical'
 }
 
+interface PrismaVaultBalance {
+  findUnique(opts: Record<string, unknown>): Promise<Record<string, unknown> | null>
+  upsert(opts: Record<string, unknown>): Promise<Record<string, unknown>>
+}
+
+interface PrismaClient {
+  vaultBalance: PrismaVaultBalance
+}
+
 export class PortfolioReconcileService {
-  constructor(private prisma: any) {}
+  constructor(private prisma: PrismaClient) {}
 
   async reconcilePortfolio(
     walletAddress: string,
@@ -200,13 +209,13 @@ export class PortfolioReconcileService {
 
   async getReconciliationHistory(
     walletAddress: string,
-    limit: number = 10
+    _limit: number = 10
   ): Promise<ReconciliationResult[]> {
     // Placeholder for fetching history from audit logs
     return []
   }
 }
 
-export function createPortfolioReconcileService(prisma: any) {
+export function createPortfolioReconcileService(prisma: PrismaClient) {
   return new PortfolioReconcileService(prisma)
 }

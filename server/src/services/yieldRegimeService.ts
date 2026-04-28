@@ -93,9 +93,6 @@ export class YieldRegimeService {
   private calculateIncentiveChange(snapshots: YieldSnapshot[]): number {
     if (snapshots.length < 2) return 0
 
-    const first = snapshots[0]
-    const last = snapshots[snapshots.length - 1]
-
     // Incentive change approximated by largest single APY jump
     let maxJump = 0
     for (let i = 1; i < snapshots.length; i++) {
