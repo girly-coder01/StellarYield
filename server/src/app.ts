@@ -8,6 +8,7 @@ import { context } from "./graphql/context";
 import { graphqlSchema } from "./graphql/schema";
 import { metricsMiddleware, getMetrics } from "./middleware/metrics";
 import { auditMiddleware } from "./middleware/audit";
+import { sendError } from "./utils/errorResponse";
 import { requestContextMiddleware } from "./middleware/requestContext";
 import { errorHandler, requestLoggerMiddleware } from "./middleware/requestLogger";
 import yieldsRouter from "./routes/yields";
@@ -31,6 +32,11 @@ import openapiRouter from "./routes/openapi";
 import incidentsRouter from "./routes/incidents";
 import simulatorRouter from "./routes/simulator";
 import correlationRouter from "./routes/correlation";
+import strategiesRouter from "./routes/strategies";
+import treasuryRouter from "./routes/treasury";
+import governanceRouter from "./routes/governance";
+import presetsRouter from "./routes/presets";
+import analyticsRouter from "./routes/analytics";
 import { createAuthChallenge, verifyAuthChallenge } from "./utils/stellarAuth";
 import {
   getRecommendationTimeline,
@@ -109,6 +115,11 @@ export function createApp() {
   app.use("/api/simulator", simulatorRouter);
   app.use("/api/correlation", correlationRouter);
   app.use("/api/openapi", openapiRouter);
+  app.use("/api/strategies", strategiesRouter);
+  app.use("/api/treasury", treasuryRouter);
+  app.use("/api/governance", governanceRouter);
+  app.use("/api/presets", presetsRouter);
+  app.use("/api/analytics", analyticsRouter);
 
   // Legacy JSON metrics (internal tooling)
   app.get("/api/metrics", getMetrics);
@@ -120,10 +131,12 @@ export function createApp() {
     const prisma = await loadPrismaClient();
 
     if (!prisma) {
-      res.status(503).json({
-        error:
-          "Events database is unavailable until Prisma client is generated.",
-      });
+      sendError(
+        res,
+        503,
+        "DB_UNAVAILABLE",
+        "Events database is unavailable until Prisma client is generated."
+      );
       return;
     }
 
@@ -231,6 +244,12 @@ export function createApp() {
     try {
       res.json(createAuthChallenge(req.body));
     } catch (error) {
+      sendError(
+        res,
+        400,
+        "INVALID_AUTH_REQUEST",
+        error instanceof Error ? error.message : "Invalid auth request."
+      );
       res.status(400).json({
         error: error instanceof Error ? error.message : "Invalid auth request.",
         requestId: (req as unknown as { requestId?: string }).requestId,
@@ -242,6 +261,12 @@ export function createApp() {
     try {
       res.json(verifyAuthChallenge(req.body));
     } catch (error) {
+      sendError(
+        res,
+        400,
+        "INVALID_AUTH_VERIFICATION",
+        error instanceof Error ? error.message : "Invalid auth verification request."
+      );
       res.status(400).json({
         error:
           error instanceof Error
