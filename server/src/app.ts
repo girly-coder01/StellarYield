@@ -29,6 +29,10 @@ import prometheusMetricsRouter from "./routes/prometheusMetrics";
 import alertsRouter from "./routes/alerts";
 import openapiRouter from "./routes/openapi";
 import incidentsRouter from "./routes/incidents";
+import strategiesRouter from "./routes/strategies";
+import treasuryRouter from "./routes/treasury";
+import governanceRouter from "./routes/governance";
+import presetsRouter from "./routes/presets";
 import { createAuthChallenge, verifyAuthChallenge } from "./utils/stellarAuth";
 
 type EventsPrismaClient = {
@@ -100,6 +104,10 @@ export function createApp() {
   app.use("/api/alerts", alertsRouter);
   app.use("/api/incidents", incidentsRouter);
   app.use("/api/openapi", openapiRouter);
+  app.use("/api/strategies", strategiesRouter);
+  app.use("/api/treasury", treasuryRouter);
+  app.use("/api/governance", governanceRouter);
+  app.use("/api/presets", presetsRouter);
 
   // Legacy JSON metrics (internal tooling)
   app.get("/api/metrics", getMetrics);
