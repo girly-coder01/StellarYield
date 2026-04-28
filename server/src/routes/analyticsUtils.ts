@@ -18,23 +18,55 @@ export function validateAttributionRequest(walletAddress: string, startTime: str
   return { valid: true };
 }
 
-export function formatAttributionReport(report: any): any {
+interface AttributionReport {
+  breakdown?: Array<{ contribution: number }>;
+  [key: string]: unknown;
+}
+
+interface CompatibilityReport {
+  issues?: Array<{ severity: string }>;
+  [key: string]: unknown;
+}
+
+interface HealthScore {
+  overallScore: number;
+  strategyId?: string;
+  [key: string]: unknown;
+}
+
+interface ReliabilityScore {
+  overallScore: number;
+  [key: string]: unknown;
+}
+
+interface Provider {
+  reliabilityScore?: number;
+  overallScore?: number;
+  [key: string]: unknown;
+}
+
+interface ProtocolReport {
+  protocols?: Array<{ protocolName: string; status: string; criticalIssues?: number }>;
+  [key: string]: unknown;
+}
+
+export function formatAttributionReport(report: AttributionReport): AttributionReport {
   return {
     ...report,
     formattedDate: new Date().toISOString(),
-    totalAttribution: report.breakdown?.reduce((sum: number, item: any) => sum + item.contribution, 0) || 0,
+    totalAttribution: report.breakdown?.reduce((sum: number, item: { contribution: number }) => sum + item.contribution, 0) || 0,
   };
 }
 
-export function formatCompatibilityReport(report: any): any {
+export function formatCompatibilityReport(report: CompatibilityReport): CompatibilityReport {
   return {
     ...report,
     formattedDate: new Date().toISOString(),
-    criticalIssues: report.issues?.filter((issue: any) => issue.severity === 'critical') || [],
+    criticalIssues: report.issues?.filter((issue: { severity: string }) => issue.severity === 'critical') || [],
   };
 }
 
-export function formatHealthScore(score: any): any {
+export function formatHealthScore(score: HealthScore): HealthScore {
   return {
     ...score,
     status: score.overallScore >= 80 ? 'healthy' : score.overallScore >= 60 ? 'degraded' : 'critical',
@@ -42,18 +74,23 @@ export function formatHealthScore(score: any): any {
   };
 }
 
-export function getCriticalHealthAlerts(scores: any[]): any[] {
+export function getCriticalHealthAlerts(scores: HealthScore[]): Array<{
+  strategyId: string;
+  severity: string;
+  message: string;
+  timestamp: string;
+}> {
   return scores
     .filter(score => score.overallScore < 60)
     .map(score => ({
-      strategyId: score.strategyId,
+      strategyId: score.strategyId || 'unknown',
       severity: score.overallScore < 40 ? 'critical' : 'warning',
       message: `Strategy health score: ${score.overallScore}`,
       timestamp: new Date().toISOString(),
     }));
 }
 
-export function formatReliabilityScore(reliability: any): any {
+export function formatReliabilityScore(reliability: ReliabilityScore): ReliabilityScore {
   return {
     ...reliability,
     status: reliability.overallScore >= 80 ? 'reliable' : reliability.overallScore >= 60 ? 'moderate' : 'unreliable',
@@ -61,16 +98,16 @@ export function formatReliabilityScore(reliability: any): any {
   };
 }
 
-export function getWeightedProviderSelection(providers: any[]): any[] {
+export function getWeightedProviderSelection(providers: Provider[]): Array<Provider & { weight: number }> {
   return providers
     .map(provider => ({
       ...provider,
-      weight: provider.reliabilityScore / 100, // Simple weighting based on reliability
+      weight: (provider.overallScore || provider.reliabilityScore || 0) / 100, // Simple weighting based on score
     }))
     .sort((a, b) => b.weight - a.weight);
 }
 
-export function isProtocolSafeForExecution(protocolName: string, report: any): boolean {
-  const protocolStatus = report.protocols?.find((p: any) => p.protocolName === protocolName);
-  return protocolStatus?.status === 'compatible' && protocolStatus?.criticalIssues === 0;
+export function isProtocolSafeForExecution(protocolName: string, report: ProtocolReport): boolean {
+  const protocolStatus = report.protocols?.find((p: { protocolName: string; status: string; criticalIssues?: number }) => p.protocolName === protocolName);
+  return protocolStatus?.status === 'compatible' && (protocolStatus?.criticalIssues ?? 0) === 0;
 }

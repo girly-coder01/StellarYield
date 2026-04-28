@@ -148,7 +148,7 @@ router.get('/compatibility/:protocolName', async (req, res) => {
       data: status,
     });
   } catch (error) {
-    console.error(`Protocol compatibility check failed for ${protocolName}:`, error);
+    console.error(`Protocol compatibility check failed:`, error);
     res.status(500).json({
       error: 'Failed to check protocol compatibility',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -171,7 +171,7 @@ router.get('/compatibility/safe/:protocolName', async (req, res) => {
       data: {
         protocolName,
         isSafe,
-        status: report.protocols.find((p: any) => p.protocolName === protocolName)?.status || 'unknown'
+        status: report.protocols?.find((p: { protocolName: string }) => p.protocolName === protocolName)?.status || 'unknown'
       }
     });
   } catch (error) {
@@ -337,7 +337,7 @@ router.get('/reliability/:providerId', async (req, res) => {
       data: formattedReliability,
     });
   } catch (error) {
-    console.error(`Reliability score calculation failed for ${providerId}:`, error);
+    console.error(`Reliability score calculation failed:`, error);
     res.status(500).json({
       error: 'Failed to calculate reliability score',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -455,7 +455,7 @@ router.get('/dashboard', async (req, res) => {
     const { walletAddress, strategyIds, providerIds } = req.query;
     
     // Initialize results
-    const dashboardData: any = {
+    const dashboardData: Record<string, unknown> = {
       attribution: null,
       compatibility: null,
       healthScores: [],
@@ -490,7 +490,7 @@ router.get('/dashboard', async (req, res) => {
     try {
       const compatibility = await protocolCompatibilityEngine.runCompatibilityCheck();
       dashboardData.compatibility = formatCompatibilityReport(compatibility);
-      dashboardData.summary.criticalIssues = compatibility.criticalIssues.length;
+      (dashboardData.summary as { criticalIssues: number }).criticalIssues = compatibility.issues?.filter((issue: { severity: string }) => issue.severity === 'critical').length || 0;
     } catch (error) {
       console.error('Compatibility data fetch failed:', error);
     }
@@ -522,9 +522,10 @@ router.get('/dashboard', async (req, res) => {
     }
 
     // Calculate overall health summary
-    if (dashboardData.healthScores.length > 0) {
-      const avgScore = dashboardData.healthScores.reduce((sum: number, score: { overallScore: number }) => sum + score.overallScore, 0) / dashboardData.healthScores.length;
-      dashboardData.summary.overallHealth = avgScore >= 80 ? 'healthy' : avgScore >= 60 ? 'degraded' : 'critical';
+    const healthScores = dashboardData.healthScores as Array<{ overallScore: number }>;
+    if (healthScores.length > 0) {
+      const avgScore = healthScores.reduce((sum: number, score: { overallScore: number }) => sum + score.overallScore, 0) / healthScores.length;
+      (dashboardData.summary as Record<string, unknown>).overallHealth = avgScore >= 80 ? 'healthy' : avgScore >= 60 ? 'degraded' : 'critical';
     }
 
     res.json({
